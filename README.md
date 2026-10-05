@@ -1,7 +1,7 @@
 # Коля — готовая программа для дежурного инженера
 
-Версия: v0.1.0-rc.7
-Исходный коммит сборки: 6a9409b2f90a9f1d848fb20f474c9fa9de69f449
+Версия: v0.1.0-rc.8
+Исходный коммит сборки: 4b3cf0c2ce28bfe2739e5b59d222610699aec158
 
 Этот репозиторий содержит только дистрибутив. Исходники приложения,
 инфраструктурные контракты и доступы оператора остаются приватными.
@@ -13,7 +13,7 @@ arm64. Нужны curl и sha256sum (Linux) либо shasum (macOS). Go, Git и 
 GitHub не требуются.
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.7/install.sh | sh
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.8/install.sh | sh
 ```
 
 Скрипт фиксирует один релиз и SHA256 четырёх программ, проверяет скачанные
@@ -26,7 +26,7 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 успешно и печатает точную команду продолжения. Чтобы отложить настройку явно:
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.7/install.sh | sh -s -- --no-onboard
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.8/install.sh | sh -s -- --no-onboard
 "$HOME/.kolya/bin/kolya-agent" version
 "$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --plain
 ```
@@ -42,9 +42,19 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 
 - **Приватные контракты**: полный локальный каталог политики и inventory.
   В публичном дистрибутиве его нет; мастер не создаёт фиктивные контракты.
-- **LLM**: HTTPS адрес, например `https://llm.example/v1`, название модели и
-  token. Путь `/v1` мастер добавляет автоматически. Отдельный CA провайдера
-  необязателен, если подходят системные доверенные CA.
+- **LLM**: HTTPS адрес API, название модели и token. Например,
+  `https://llm.example/v1` или `https://api.z.ai/api/paas/v4` для Z.ai API.
+  Указанный путь сохраняется; `/v1` мастер добавляет только к адресу без пути.
+  Суффикс `/chat/completions` вводить не нужно — его добавит Коля.
+  Для GLM Coding Plan проверьте отдельный адрес
+  `https://api.z.ai/api/coding/paas/v4` в
+  [инструкции Z.ai](https://docs.z.ai/devpack/tool/others).
+  В YAML базовый URL записывается без завершающего `/`; мастер удаляет его.
+  Отдельный CA провайдера необязателен, если подходят системные доверенные CA.
+  [HTTP API Z.ai](https://docs.z.ai/guides/develop/http/introduction)
+  использует авторизацию `Bearer` и JSON запросы. Коля учитывает особенности
+  ответа Z.ai: request ID, текст reasoning и статистику кеша; в результат
+  расследования попадают `content` или разрешённый вызов инструмента.
 - **Grafana**: HTTPS адрес без дополнительного пути, например
   `https://grafana.example:443`, organisation ID и service account token.
   Нужен локальный доверенный CA в PEM, даже если сертификат известен системе.
