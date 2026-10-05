@@ -1,7 +1,7 @@
 # Коля — готовая программа для дежурного инженера
 
-Версия: v0.1.0-rc.9
-Исходный коммит сборки: 7a9af0e782fb8128366ca16a3b54965794497b3b
+Версия: v0.1.0-rc.10
+Исходный коммит сборки: 1b360d3e12fae6d626441f64f53c690e01f732d2
 
 Этот репозиторий содержит только дистрибутив. Исходники приложения,
 инфраструктурные контракты и доступы оператора остаются приватными.
@@ -13,7 +13,7 @@ arm64. Нужны curl и sha256sum (Linux) либо shasum (macOS). Go, Git и 
 GitHub не требуются.
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.9/install.sh | sh
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.10/install.sh | sh
 ```
 
 Скрипт фиксирует один релиз и SHA256 четырёх программ, проверяет скачанные
@@ -26,9 +26,9 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 успешно и печатает точную команду продолжения. Чтобы отложить настройку явно:
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.9/install.sh | sh -s -- --no-onboard
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.10/install.sh | sh -s -- --no-onboard
 "$HOME/.kolya/bin/kolya-agent" version
-"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --plain
+"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --work-dir "$HOME/work/tf-backend" --plain
 ```
 
 Необязательная команда `~/.local/bin/kolya` создаётся только в безопасном
@@ -48,15 +48,16 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
   необязателен при системном доверии.
 - **Grafana**: HTTPS адрес без дополнительного пути, например
   `https://grafana.example:443`, organisation ID и service account token.
-  Нужен локальный доверенный CA в PEM, даже если сертификат известен системе.
+  Отдельный доверенный CA в PEM необязателен, если сертификату доверяет система.
 - **MCP**: доверенный исполняемый `mcp-grafana` и рабочий каталог. Мастер может
-  скачать поддерживаемый официальный v1.2.0 с закреплённой SHA256. CA и MCP
+  скачать поддерживаемый официальный v1.2.0 с закреплённой SHA256. Выбранные CA и MCP
   хешируются автоматически. Каталоги и файлы должны принадлежать вам, без
   символических ссылок и небезопасных прав.
 - **VictoriaLogs**: UID datasource в Grafana; поле обязательно в конфиге,
   даже когда получение логов выключено.
 - **GitLab**: HTTPS API, например `https://gitlab.example/api/v4`, и read-only
-  token. Мастер добавляет `/api/v4`. При собственном CA укажите его PEM.
+  token. Мастер добавляет `/api/v4`. При собственном CA укажите его PEM;
+  без отдельного CA используется системное доверие.
 - Режим проактивности, область алертов и настройки уведомлений о здоровье.
 
 Мастер скрывает ввод токенов и сохраняет их в отдельных файлах `0600`.
@@ -67,6 +68,15 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 Повторный `setup` позволяет выбрать раздел: неизменённые endpoints, ссылки
 на секреты, фильтры проактивности и health сохраняются. Отмена и ошибки не
 заменяют рабочую конфигурацию. Мастер не открывает и не мигрирует SQLite.
+
+Для Grafana/GitLab Enter в новом `setup` пропускает отдельный CA. В уже
+настроенном разделе Enter сохраняет текущий CA; `-` удаляет путь и его SHA256.
+В ручном YAML v1/v2 для системного доверия полностью удалите **обе** строки
+`ca_file`/`ca_sha256` из `grafana` или `releases.gitlab`. Пустые значения,
+неполная пара и неверный hash отклоняются. Системное доверие проверяет цепочку
+и имя HTTPS сервера; оно не отключает TLS. Недоверенный сертификат остаётся
+ошибкой, а неверный выбранный CA/hash не заменяется системными сертификатами.
+Рабочий каталог `"$HOME/work/tf-backend"` в команде выше должен существовать.
 
 ## Провайдеры и выбор модели
 
@@ -424,6 +434,112 @@ proactivity:
   min_firing_for: "30s"
   max_snapshot_age: "2m"
   max_attempts: 3
+  max_concurrent: 1
+```
+
+### Полный пример без отдельных CA Grafana/GitLab
+
+Это полный пример YAML с системным доверием, `observe` и
+выключенным Telegram. Замените фиктивные пути, endpoints, модель, UID и
+фиктивный SHA256 MCP настоящими значениями. Токены хранятся в отдельных
+непустых файлах `0600`; пример их содержимого не включает. Собственный CA
+можно добавить парой полей из предыдущего примера после проверки его происхождения.
+
+```yaml
+# Complete synthetic no-custom-CA example: system TLS trust, observe, no model calls.
+# Replace all fake paths/endpoints/model/UID and the fake MCP SHA256 before use.
+# Omit both ca_file and ca_sha256 for Grafana/GitLab; TLS verification stays enabled.
+schema_version: 2
+environment: "production"
+
+state:
+  database_file: "/absolute/kolya-root/db/first-test.db"
+  backup_directory: "/absolute/kolya-root/backup"
+
+contracts:
+  directory: "/absolute/operator-contracts"
+
+provider:
+  type: "openai_compatible"
+  base_url: "https://api.example.com/v1"
+  model: "your-model"
+  token_file: "/absolute/kolya-root/secrets/provider.token"
+
+grafana:
+  url: "https://grafana.example.com:443"
+  org_id: 1
+  token_file: "/absolute/kolya-root/secrets/grafana.token"
+  mcp:
+    executable_file: "/absolute/kolya-root/bin/mcp-grafana"
+    executable_sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    working_directory: "/absolute/kolya-root/mcp-work"
+
+victorialogs:
+  transport: "grafana_proxy"
+  datasource_uid: "your_victorialogs_uid"
+
+alerts:
+  source: "grafana_polling"
+  poll_interval: "60s"
+
+releases:
+  retention: "720h"
+  incident_window:
+    before: "2h"
+    after: "15m"
+  gitlab:
+    api_url: "https://gitlab.example.com/api/v4"
+    token_file: "/absolute/kolya-root/secrets/gitlab.token"
+    discovery: "all_token_visible"
+    include_archived: false
+    environment_tiers:
+      - "production"
+    poll_interval: "60s"
+  grafana_annotations:
+    connection: "grafana"
+    payload_schema: "kolya.release.v1"
+    required_tags:
+      - "kolya-release-v1"
+      - "deployment"
+      - "production"
+    require_services: true
+
+runtime:
+  config_reload: false
+  output:
+    format: "jsonl"
+    publication: "stdout_at_least_once"
+
+telegram:
+  enabled: false
+
+features:
+  memory:
+    mode: "OFF"
+  repository_access:
+    mode: "OFF"
+  log_queries:
+    mode: "OFF"
+  strategy_adaptation:
+    mode: "OFF"
+  runbook_proposals:
+    mode: "OFF"
+
+# Passive local status; no Telegram is required. See ../health.md.
+health:
+  enabled: true
+  failure_threshold: 3
+  source_max_age: "3m"
+  heartbeat_max_age: "90s"
+  delivery_max_age: "5m"
+  notifications: off
+  telegram_topic_id: 0
+
+proactivity:
+  mode: observe
+  scope: all
+  include_suppressed: false
+  min_firing_for: "30s"
   max_concurrent: 1
 ```
 
