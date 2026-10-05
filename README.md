@@ -1,7 +1,7 @@
 # Коля — готовая программа для дежурного инженера
 
-Версия: v0.1.0-rc.10
-Исходный коммит сборки: 1b360d3e12fae6d626441f64f53c690e01f732d2
+Версия: v0.1.0-rc.11
+Исходный коммит сборки: 98970bd099b9baab20ca8b6a7538741d66ae929b
 
 Этот репозиторий содержит только дистрибутив. Исходники приложения,
 инфраструктурные контракты и доступы оператора остаются приватными.
@@ -13,7 +13,7 @@ arm64. Нужны curl и sha256sum (Linux) либо shasum (macOS). Go, Git и 
 GitHub не требуются.
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.10/install.sh | sh
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.11/install.sh | sh
 ```
 
 Скрипт фиксирует один релиз и SHA256 четырёх программ, проверяет скачанные
@@ -26,9 +26,9 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 успешно и печатает точную команду продолжения. Чтобы отложить настройку явно:
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.10/install.sh | sh -s -- --no-onboard
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.11/install.sh | sh -s -- --no-onboard
 "$HOME/.kolya/bin/kolya-agent" version
-"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --work-dir "$HOME/work/tf-backend" --plain
+"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --work-dir "$HOME/work/tf-backend"
 ```
 
 Необязательная команда `~/.local/bin/kolya` создаётся только в безопасном
@@ -36,6 +36,48 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 Используйте полный путь из примеров, если каталог не входит в PATH.
 
 ## Подготовить данные и пройти мастер
+
+По умолчанию мастер использует Bubble Tea: ↑/↓ выбирают пункт, Enter подтверждает,
+←/→, Backspace и Ctrl-U редактируют текст. PgUp/PgDn прокручивают пояснения и
+полный обзор перед сохранением; длинные списки прокручиваются стрелками.
+При изменении размера терминала экран подстраивается. Токены скрыты маской.
+Ctrl-C или Ctrl-D отменяют настройку и восстанавливают терминал.
+Для простого построчного интерфейса добавьте `--plain` или задайте `TERM=dumb`:
+
+```sh
+"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --plain
+```
+
+Каталог контрактов **обязателен**: он определяет разрешённые инструменты,
+запросы, источники наблюдения и список машин и служб. Пример для существующей
+локальной копии приватного репозитория:
+`$HOME/work/kolya-devops-agent/docs/contracts`. Это отдельный путь от рабочего
+каталога `$HOME/work/tf-backend`, где запускается агент; домашняя папка и
+`~/.kolya` тоже не заменяют контракты. Нужны все четыре согласованных файла:
+
+- `grafana-model-tools.json`;
+- `denbip-runtime-allowlists.json`;
+- `observability-catalog-snapshot.json`;
+- `observability-machine-services.json`.
+
+Мастер предлагает первый существующий каталог, прошедший проверку, по порядку:
+путь из конфигурации, `WORK/docs/contracts`, `ROOT/share/contracts`, затем
+`HOME/work/kolya-devops-agent/docs/contracts`. Enter **подтверждает** предложение;
+оно не принимается без ввода оператора. В путях разрешены `~` и `~/`, но не
+`~другой-пользователь`. Пустой обязательный путь без предложения и `-` дают
+`CONTRACTS_REQUIRED`; удаление разрешено только для необязательных полей.
+
+При `CONFIG_FILE_MISSING` проверьте перечисленные отсутствующие имена.
+Если каталога нет, получите полный утверждённый `docs/contracts` у оператора
+из локальной копии приватного репозитория. При ошибке формата или целостности
+восстановите согласованные файлы и проверьте их:
+
+```sh
+"$HOME/.kolya/bin/kolya-agent" check-config --contracts "$HOME/work/kolya-devops-agent/docs/contracts"
+```
+
+Публичный дистрибутив не содержит эти файлы. Мастер не создаёт фиктивную политику,
+не позволяет пропустить проверку и не публикует приватные контракты.
 
 Текущая строгая схема требует все перечисленные входные данные, даже если
 отдельный сборщик пока не используется. Получите их от оператора заранее:
@@ -91,7 +133,7 @@ MiniMax, DeepSeek, Qwen/Alibaba и другой OpenAI-совместимый AP
 Для существующей валидной конфигурации:
 
 ```sh
-"$HOME/.kolya/bin/kolya-agent" model --root "$HOME/.kolya" --plain
+"$HOME/.kolya/bin/kolya-agent" model --root "$HOME/.kolya"
 "$HOME/.kolya/bin/kolya-agent" check-config --config "$HOME/.kolya/config.yaml"
 "$HOME/.kolya/bin/kolya-agent" preflight --config "$HOME/.kolya/config.yaml"
 "$HOME/.kolya/bin/kolya-agent" service restart --root "$HOME/.kolya"
@@ -106,7 +148,7 @@ MiniMax, DeepSeek, Qwen/Alibaba и другой OpenAI-совместимый AP
 Другой корень или отдельный конфиг задаются явно; они не меняют PATH:
 
 ```sh
-"$HOME/.kolya/bin/kolya-agent" model --root "/absolute/kolya-root" --config "/absolute/kolya-root/config.yaml" --plain
+"$HOME/.kolya/bin/kolya-agent" model --root "/absolute/kolya-root" --config "/absolute/kolya-root/config.yaml"
 "$HOME/.kolya/bin/kolya-agent" model --help
 "$HOME/.kolya/bin/kolya-agent" setup --help
 ```
@@ -115,7 +157,7 @@ MiniMax, DeepSeek, Qwen/Alibaba и другой OpenAI-совместимый AP
 `SETUP_EXISTING_CONFIG_INVALID` и точную команду полного мастера:
 
 ```sh
-"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --plain
+"$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya"
 ```
 
 Полный `setup` также позволяет выбрать раздел LLM в уже настроенной установке.
