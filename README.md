@@ -1,7 +1,7 @@
 # Коля — готовая программа для дежурного инженера
 
-Версия: v0.1.0-rc.6
-Исходный коммит сборки: 1c13a29adf022afb40abbc2f4f7218eeaeae9137
+Версия: v0.1.0-rc.7
+Исходный коммит сборки: 6a9409b2f90a9f1d848fb20f474c9fa9de69f449
 
 Этот репозиторий содержит только дистрибутив. Исходники приложения,
 инфраструктурные контракты и доступы оператора остаются приватными.
@@ -13,7 +13,7 @@ arm64. Нужны curl и sha256sum (Linux) либо shasum (macOS). Go, Git и 
 GitHub не требуются.
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.6/install.sh | sh
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.7/install.sh | sh
 ```
 
 Скрипт фиксирует один релиз и SHA256 четырёх программ, проверяет скачанные
@@ -26,7 +26,7 @@ curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '
 успешно и печатает точную команду продолжения. Чтобы отложить настройку явно:
 
 ```sh
-curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.6/install.sh | sh -s -- --no-onboard
+curl -q --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 --connect-timeout 10 --max-time 60 https://github.com/dpolishuk/kolya-releases/releases/download/v0.1.0-rc.7/install.sh | sh -s -- --no-onboard
 "$HOME/.kolya/bin/kolya-agent" version
 "$HOME/.kolya/bin/kolya-agent" setup --root "$HOME/.kolya" --plain
 ```
