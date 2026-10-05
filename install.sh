@@ -11,15 +11,15 @@ kolya_main() {
  case "${1:-}" in
   --help|-h) printf '%s\n' 'Kolya: install [--root PATH] [--no-onboard] [--plain]' 'Requires curl and sha256sum or shasum. Linux/macOS amd64/arm64.'; return 0 ;;
  esac
- kolya_version='v0.1.0-rc.1'
+ kolya_version='v0.1.0-rc.2'
  case "$kolya_version" in *@*) printf '%s\n' 'error=INSTALL_UNRENDERED_RELEASE: use the generated public release installer.' >&2; return 1;; esac
  case "$(uname -s)" in Linux) kolya_os=linux;; Darwin) kolya_os=darwin;; *) printf '%s\n' 'error=INSTALL_PLATFORM_UNSUPPORTED' >&2; return 1;; esac
  case "$(uname -m)" in x86_64|amd64) kolya_arch=amd64;; aarch64|arm64) kolya_arch=arm64;; *) printf '%s\n' 'error=INSTALL_PLATFORM_UNSUPPORTED' >&2; return 1;; esac
  case "$kolya_os-$kolya_arch" in
-  linux-amd64) kolya_sha='ae24e67c6245f11edc054d6ae14997f11ed4c1213f37ee7637590f0b19072f89';;
-  linux-arm64) kolya_sha='11d9536eebf4fed09fbd5d696ea1d04a5e9054dbefbc5a13de392ed1688f5b23';;
-  darwin-amd64) kolya_sha='5a9badf0d89bf47ef3330e76af5fef2bac3120171a6c9eaff6a44cbb6f1ce87d';;
-  darwin-arm64) kolya_sha='4fe894e56dd856add26755cdc235757ab0b8cc9a08973db3ff43052c00a20153';;
+  linux-amd64) kolya_sha='eb44fe8441041a58d639b47bbd16dbc82977c347d1eba0bae615c95bcf2935ba';;
+  linux-arm64) kolya_sha='750f8011e212bae7f415254aa3630aab95cb07ffc26e73f16e059785866082f2';;
+  darwin-amd64) kolya_sha='db22c60f9b4ea361c91bddffad5384d1533687c0389062c33c3dcda0c7943f57';;
+  darwin-arm64) kolya_sha='77a00a6c106038e89be142653aee193f7480c8ce71a3f3d6f88dde6531af3303';;
  esac
  case "$kolya_sha" in ''|*[!0-9a-f]*) printf '%s\n' 'error=INSTALL_UNRENDERED_RELEASE' >&2; return 1;; esac
  [ "${#kolya_sha}" -eq 64 ] || return 1
