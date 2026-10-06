@@ -11,15 +11,20 @@ kolya_main() {
  case "${1:-}" in
   --help|-h) printf '%s\n' 'Kolya: install [--root PATH] [--no-onboard] [--plain]' 'Requires curl and sha256sum or shasum. Linux/macOS amd64/arm64.'; return 0 ;;
  esac
- kolya_version='v0.1.0-rc.11'
+ kolya_uid=$(id -u) || { printf '%s\n' 'error=INSTALL_UID_UNAVAILABLE: cannot determine effective user.' >&2; return 1; }
+ case "$kolya_uid" in
+  0) printf '%s\n' 'error=INSTALL_ROOT_UNSUPPORTED: log in as an ordinary user and rerun without sudo.' >&2; return 1;;
+  ''|*[!0-9]*) printf '%s\n' 'error=INSTALL_UID_UNAVAILABLE: cannot determine effective user.' >&2; return 1;;
+ esac
+ kolya_version='v0.1.0-rc.12'
  case "$kolya_version" in *@*) printf '%s\n' 'error=INSTALL_UNRENDERED_RELEASE: use the generated public release installer.' >&2; return 1;; esac
  case "$(uname -s)" in Linux) kolya_os=linux;; Darwin) kolya_os=darwin;; *) printf '%s\n' 'error=INSTALL_PLATFORM_UNSUPPORTED' >&2; return 1;; esac
  case "$(uname -m)" in x86_64|amd64) kolya_arch=amd64;; aarch64|arm64) kolya_arch=arm64;; *) printf '%s\n' 'error=INSTALL_PLATFORM_UNSUPPORTED' >&2; return 1;; esac
  case "$kolya_os-$kolya_arch" in
-  linux-amd64) kolya_sha='7825488cd956c4cc224765d7c6c33926b1b0ad10ce5b7db86c6a7d0d24f1091f';;
-  linux-arm64) kolya_sha='621d68ee8d63794b3cbba7891eade4694e0af3e3e2673e92f73b2d5fd33b766e';;
-  darwin-amd64) kolya_sha='747bcfdc2c1c265962209e7bb607b22bc7e45039f273b2a3931927ad1c990057';;
-  darwin-arm64) kolya_sha='d475d638b082aac75741a02d8ecb2dd11e28b99b92a2f7a5ef7db0035dc4f283';;
+  linux-amd64) kolya_sha='3fbc4b69c4c48b5996bfd5eb839456df6ced58dff6f4defba981d41f71389ff0';;
+  linux-arm64) kolya_sha='1f896f88732be3d26e08ef08b92fdc036b71a67e0763664d533589b8ac7dc325';;
+  darwin-amd64) kolya_sha='f09a33c6b543b121cd4aa233c7f4cda7dd7edf0a66db8bed8dbb36765dbfbb65';;
+  darwin-arm64) kolya_sha='58e40e7d916831c06b6b5de4c1d1289246251f9cf16e34b8f57cde2eadf383b3';;
  esac
  case "$kolya_sha" in ''|*[!0-9a-f]*) printf '%s\n' 'error=INSTALL_UNRENDERED_RELEASE' >&2; return 1;; esac
  [ "${#kolya_sha}" -eq 64 ] || return 1
